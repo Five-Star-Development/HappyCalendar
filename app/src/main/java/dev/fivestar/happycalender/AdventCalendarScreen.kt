@@ -86,6 +86,7 @@ fun AdventCalendarDoor(
                 if (!isOpen && validateItem(item)) {
                     isOpen = true
                 }
+                onClick.invoke()
             }
     ) {
         // Door number
