@@ -14,10 +14,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val viewModel = CalendarViewModel()
         setContent {
             HappyCalenderTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AdventCalendarScreen(modifier = Modifier.padding(innerPadding))
+                    AdventCalendarScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = viewModel
+                    )
                 }
             }
         }
