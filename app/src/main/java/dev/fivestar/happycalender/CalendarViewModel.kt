@@ -1,30 +1,33 @@
 package dev.fivestar.happycalender
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-class CalendarViewModel : ViewModel() {
+class CalendarViewModel(val repo: CalendarRepository) : ViewModel() {
 
-    private val _openDoorEvent = MutableSharedFlow<AdventCalendarItem>()
-    val openDoorEvent = _openDoorEvent.asSharedFlow()
+    data class UiState(
+        val items: List<AdventCalendarItem>
+    )
+
+    private val _uiState = MutableStateFlow(UiState(items = repo.getCalendarItems()))
+    val uiState = _uiState.asSharedFlow()
 
     fun onDoorClicked(item: AdventCalendarItem) {
         if (validateItem(item)) {
-            viewModelScope.launch {
-                _openDoorEvent.emit(item)
+            val updatedItems = _uiState.value.items.map {
+                if (it.day == item.day) it.copy(isUnlocked = true) else it
             }
+            _uiState.update{ it.copy(items = updatedItems) }
         }
     }
 
     private fun validateItem(item: AdventCalendarItem): Boolean {
-        val startDate = LocalDate.of(2024, 12, 1)
         val today = LocalDate.now()
-        return (item.day - 1) <= ChronoUnit.DAYS.between(startDate, today)
+        return (item.day - 1) <= ChronoUnit.DAYS.between(repo.getStartDate(), today)
     }
 
 }

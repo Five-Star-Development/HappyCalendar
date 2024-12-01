@@ -39,7 +39,7 @@ import java.time.temporal.ChronoUnit
 data class AdventCalendarItem(
     val day: Int,
     val imageResId: Int,
-    val isUnlocked: Boolean = false
+    var isUnlocked: Boolean = false
 )
 
 private fun validateItem(item: AdventCalendarItem): Boolean {
@@ -140,18 +140,16 @@ fun AdventCalendarDoor(
 @Composable
 fun AdventCalendarScreen(modifier: Modifier, viewModel: CalendarViewModel) {
 
-    var selectedItem by remember { mutableStateOf<AdventCalendarItem?>(null) }
-
-    AdventCalendar(
-        modifier = modifier,
-        items = calendarItems.shuffled(),
-        onDoorClicked = { item ->
-            viewModel.onDoorClicked(item)
-        },
-    )
-
-    viewModel.openDoorEvent.collectAsState(null).let { item ->
-        selectedItem = item.value
+    viewModel.uiState.collectAsState(null).let {
+        it.value?.let { state ->
+            AdventCalendar(
+                modifier = modifier,
+                items = state.items,
+                onDoorClicked = { item ->
+                    viewModel.onDoorClicked(item)
+                },
+            )
+        }
     }
 }
 
