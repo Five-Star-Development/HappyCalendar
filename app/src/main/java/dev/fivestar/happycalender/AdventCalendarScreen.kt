@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +67,7 @@ fun AdventCalendarDoor(
     onClick: () -> Unit
 ) {
     var isOpen by remember { mutableStateOf(item.isUnlocked) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -82,7 +85,8 @@ fun AdventCalendarDoor(
             text = item.day.toString(),
             modifier = Modifier
                 .align(Alignment.Center)
-                .alpha(if (isOpen) 0f else 1f)
+                .alpha(if (isOpen) 0f else 1f),
+            color = Color.Black
         )
 
         // Revealed image
@@ -95,10 +99,31 @@ fun AdventCalendarDoor(
             Image(
                 painter = painterResource(id = item.imageResId),
                 contentDescription = "Day ${item.day} image",
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().clickable {
+                    showDialog = true
+                },
                 contentScale = ContentScale.Crop
             )
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            text = {
+                Image(
+                    painter = painterResource(id = item.imageResId),
+                    contentDescription = "Day ${item.day} image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit // Adjust content scale as needed
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Schließen")
+                }
+            }
+        )
     }
 }
 
