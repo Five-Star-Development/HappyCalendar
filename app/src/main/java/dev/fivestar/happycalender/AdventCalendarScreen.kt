@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,12 +33,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 data class AdventCalendarItem(
     val day: Int,
     val imageResId: Int,
     val isUnlocked: Boolean = false
 )
+
+private fun validateItem(item: AdventCalendarItem): Boolean {
+    val startDate = LocalDate.of(2024, 12, 1)
+    val today = LocalDate.now()
+    return (item.day - 1) <= ChronoUnit.DAYS.between(startDate, today)
+}
 
 @Composable
 fun AdventCalendar(
@@ -74,9 +83,8 @@ fun AdventCalendarDoor(
             .aspectRatio(1f)
             .background(Color.LightGray)
             .clickable {
-                if (!isOpen) {
+                if (!isOpen && validateItem(item)) {
                     isOpen = true
-                    onClick()
                 }
             }
     ) {
@@ -129,14 +137,7 @@ fun AdventCalendarDoor(
 
 // Example Usage
 @Composable
-fun AdventCalendarScreen(modifier: Modifier) {
-    val calendarItems = List(24) { day ->
-        AdventCalendarItem(
-            day = day + 1,
-            imageResId = R.drawable.profile, // Replace with your image resources
-            isUnlocked = false
-        )
-    }
+fun AdventCalendarScreen(modifier: Modifier, viewModel: CalendarViewModel) {
 
     var selectedItem by remember { mutableStateOf<AdventCalendarItem?>(null) }
 
@@ -144,9 +145,13 @@ fun AdventCalendarScreen(modifier: Modifier) {
         modifier = modifier,
         items = calendarItems.shuffled(),
         onDoorClicked = { item ->
-            selectedItem = item
-        }
+            viewModel.onDoorClicked(item)
+        },
     )
+
+    viewModel.openDoorEvent.collectAsState(null).let { item ->
+        selectedItem = item.value
+    }
 }
 
 @Preview(showBackground = true, name = "Advent Calendar")
