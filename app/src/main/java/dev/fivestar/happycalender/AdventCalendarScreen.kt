@@ -1,5 +1,6 @@
 package dev.fivestar.happycalender
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -46,20 +47,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 data class AdventCalendarItem(
     val day: Int,
     val imageResId: Int,
     var isUnlocked: Boolean = false
 )
-
-private fun validateItem(item: AdventCalendarItem): Boolean {
-    val startDate = LocalDate.of(2024, 12, 1)
-    val today = LocalDate.now()
-    return (item.day - 1) <= ChronoUnit.DAYS.between(startDate, today)
-}
 
 @Composable
 fun AdventCalendar(
@@ -100,7 +93,6 @@ fun AdventCalendarDoor(
     item: AdventCalendarItem,
     onClick: () -> Unit
 ) {
-    var isOpen by remember { mutableStateOf(item.isUnlocked) }
     var showDialog by remember { mutableStateOf(false) }
 
     Box(
@@ -108,9 +100,6 @@ fun AdventCalendarDoor(
             .aspectRatio(1f)
             .background(Color(255,255,255, 15))
             .clickable {
-                if (!isOpen && validateItem(item)) {
-                    isOpen = true
-                }
                 onClick.invoke()
             }
     ) {
@@ -119,13 +108,13 @@ fun AdventCalendarDoor(
             text = item.day.toString(),
             modifier = Modifier
                 .align(Alignment.Center)
-                .alpha(if (isOpen) 0f else 1f),
+                .alpha(if (item.isUnlocked) 0f else 1f),
             color = Color.White
         )
 
         // Revealed image
         AnimatedVisibility(
-            visible = isOpen,
+            visible = item.isUnlocked,
             enter = slideInHorizontally(
                 animationSpec = tween(600)
             ) + fadeIn()
@@ -171,8 +160,8 @@ fun AdventCalendarDoor(
 // Example Usage
 @Composable
 fun AdventCalendarScreen(modifier: Modifier, viewModel: CalendarViewModel) {
-
     viewModel.uiState.collectAsState(null).let {
+        Log.d("AdventCalendarScreen", "list plz $it")
         it.value?.let { state ->
             AdventCalendar(
                 modifier = modifier,

@@ -1,5 +1,6 @@
 package dev.fivestar.happycalender
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,15 +14,19 @@ class CalendarViewModel(val repo: CalendarRepository) : ViewModel() {
         val items: List<AdventCalendarItem>
     )
 
-    private val _uiState = MutableStateFlow(UiState(items = repo.getCalendarItems()))
+    private val _uiState = MutableStateFlow(UiState(items = emptyList()))
     val uiState = _uiState.asSharedFlow()
+
+    init {
+        Log.d("CalendarViewModel", "init")
+        repo.getCalendarItems().observeForever { list ->
+            _uiState.update{ it.copy(items = list) }
+        }
+    }
 
     fun onDoorClicked(item: AdventCalendarItem) {
         if (validateItem(item)) {
-            val updatedItems = _uiState.value.items.map {
-                if (it.day == item.day) it.copy(isUnlocked = true) else it
-            }
-            _uiState.update{ it.copy(items = updatedItems) }
+            repo.unlockItem(item)
         }
     }
 
