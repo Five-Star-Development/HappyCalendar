@@ -17,10 +17,11 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.AlertDialog
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 
 data class AdventCalendarItem(
@@ -58,6 +60,7 @@ data class AdventCalendarItem(
 fun AdventCalendar(
     modifier: Modifier = Modifier,
     items: List<AdventCalendarItem>,
+    annoyUser: Boolean = false,
     onDoorClicked: (AdventCalendarItem) -> Unit
 ) {
     Image(
@@ -73,18 +76,25 @@ fun AdventCalendar(
         columns = GridCells.Fixed(6),
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-
-        }
-
         items(items) { item ->
-            AdventCalendarDoor(
-                item = item,
-                onClick = { onDoorClicked(item) }
-            )
+            Box(modifier = Modifier.size(170.dp), contentAlignment = Alignment.Center) {
+                AdventCalendarDoor(
+                    item = item,
+                    onClick = { onDoorClicked(item) }
+                )
+            }
         }
+    }
+
+    if (annoyUser) {
+        Image(
+            painter = painterResource(id = R.drawable.annoy),
+            contentDescription = "background",
+            modifier = Modifier
+                .fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 
@@ -98,7 +108,7 @@ fun AdventCalendarDoor(
     Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .background(Color(255,255,255, 15))
+            .background(Color(255, 255, 255, 15))
             .clickable {
                 onClick.invoke()
             }
@@ -148,8 +158,12 @@ fun AdventCalendarDoor(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("Schließen")
+                TextButton(
+                    onClick = { showDialog = false },
+                    modifier = Modifier.height(100.dp)
+                )
+                {
+                    Text(text = "Schließen", fontSize = 28.sp)
                 }
             },
             properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -166,6 +180,7 @@ fun AdventCalendarScreen(modifier: Modifier, viewModel: CalendarViewModel) {
             AdventCalendar(
                 modifier = modifier,
                 items = state.items,
+                annoyUser = state.annoyUser,
                 onDoorClicked = { item ->
                     viewModel.onDoorClicked(item)
                 },

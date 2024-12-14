@@ -14,7 +14,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val viewModel = CalendarViewModel(CalendarRepositoryLocal())
+        val sharedPreferences = getSharedPreferences("calendar_prefs", MODE_PRIVATE)
+        val viewModel = CalendarViewModel(CalendarRepositoryLocal(sharedPreferences))
         setContent {
             HappyCalenderTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

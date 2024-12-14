@@ -1,10 +1,15 @@
 package dev.fivestar.happycalender
 
+import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.time.LocalDate
 
-class CalendarRepositoryLocal : CalendarRepository {
+class CalendarRepositoryLocal(val sharedPreferences: SharedPreferences) : CalendarRepository {
+
+    private val gson = Gson()
 
     private val items = mutableListOf(
         AdventCalendarItem(day = 1, imageResId = R.drawable.day1, isUnlocked = false),
@@ -21,7 +26,7 @@ class CalendarRepositoryLocal : CalendarRepository {
         AdventCalendarItem(day = 12, imageResId = R.drawable.day12, isUnlocked = false),
         AdventCalendarItem(day = 13, imageResId = R.drawable.day13, isUnlocked = false),
         AdventCalendarItem(day = 14, imageResId = R.drawable.day14, isUnlocked = false),
-        AdventCalendarItem(day = 15, imageResId = R.drawable.day1, isUnlocked = false),
+        AdventCalendarItem(day = 15, imageResId = R.drawable.day15, isUnlocked = false),
         AdventCalendarItem(day = 16, imageResId = R.drawable.day1, isUnlocked = false),
         AdventCalendarItem(day = 17, imageResId = R.drawable.day1, isUnlocked = false),
         AdventCalendarItem(day = 18, imageResId = R.drawable.day1, isUnlocked = false),
@@ -36,6 +41,9 @@ class CalendarRepositoryLocal : CalendarRepository {
     private val _itemList = MutableLiveData<List<AdventCalendarItem>>(items.shuffled())
 
     override fun getCalendarItems(): LiveData<List<AdventCalendarItem>> {
+        if (getStoredList().isNotEmpty()) {
+            _itemList.postValue(getStoredList())
+        }
         return _itemList
     }
 
@@ -44,7 +52,25 @@ class CalendarRepositoryLocal : CalendarRepository {
     override fun unlockItem(item: AdventCalendarItem) {
         _itemList.value?.map { listItem ->
             if (listItem.day == item.day) listItem.copy(isUnlocked = true) else listItem
-        }?.let { items -> _itemList.postValue(items) }
+        }?.let {
+            items -> _itemList.postValue(items)
+            storeList(items)
+        }
     }
+
+    private fun storeList(items: List<AdventCalendarItem>) {
+        val jsonList = gson.toJson(items)
+        sharedPreferences.edit().putString("calendar_items", jsonList).apply()
+    }
+
+    private fun getStoredList(): List<AdventCalendarItem> {
+        sharedPreferences.getString("calendar_items", null)?.let { list ->
+            val itemList: List<AdventCalendarItem> =
+                gson.fromJson(list, object : TypeToken<List<AdventCalendarItem>>() {}.type)
+            return itemList
+        }
+        return emptyList()
+    }
+
 
 }
