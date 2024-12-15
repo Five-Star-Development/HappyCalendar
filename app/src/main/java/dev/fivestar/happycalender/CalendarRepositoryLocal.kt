@@ -1,6 +1,7 @@
 package dev.fivestar.happycalender
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
@@ -59,11 +60,13 @@ class CalendarRepositoryLocal(val sharedPreferences: SharedPreferences) : Calend
     }
 
     private fun storeList(items: List<AdventCalendarItem>) {
+        Log.d("CalendarRepositoryLocal", "storeList")
         val jsonList = gson.toJson(items)
         sharedPreferences.edit().putString("calendar_items", jsonList).apply()
     }
 
     private fun getStoredList(): List<AdventCalendarItem> {
+        Log.d("CalendarRepositoryLocal", "getStoredList")
         sharedPreferences.getString("calendar_items", null)?.let { list ->
             val itemList: List<AdventCalendarItem> =
                 gson.fromJson(list, object : TypeToken<List<AdventCalendarItem>>() {}.type)

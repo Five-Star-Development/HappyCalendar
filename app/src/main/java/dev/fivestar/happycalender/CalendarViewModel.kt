@@ -4,9 +4,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -29,7 +32,9 @@ class CalendarViewModel(val repo: CalendarRepository) : ViewModel() {
 
     fun onDoorClicked(item: AdventCalendarItem) {
         if (validateItem(item)) {
-            repo.unlockItem(item)
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.unlockItem(item)
+            }
         } else {
             annoyUser()
         }

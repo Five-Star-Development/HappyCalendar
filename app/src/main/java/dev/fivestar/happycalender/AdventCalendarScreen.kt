@@ -14,13 +14,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -31,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,16 +37,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 data class AdventCalendarItem(
     val day: Int,
@@ -76,9 +73,11 @@ fun AdventCalendar(
         columns = GridCells.Fixed(6),
         contentPadding = PaddingValues(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(items) { item ->
             Box(modifier = Modifier.size(170.dp), contentAlignment = Alignment.Center) {
+                Log.d("AdventCalendar", "item rendering ${item.day}")
                 AdventCalendarDoor(
                     item = item,
                     onClick = { onDoorClicked(item) }
@@ -129,11 +128,12 @@ fun AdventCalendarDoor(
                 animationSpec = tween(600)
             ) + fadeIn()
         ) {
-            Image(
-                painter = painterResource(id = item.imageResId),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(item.imageResId)
+                    .build(),
                 contentDescription = "Day ${item.day} image",
                 modifier = Modifier
-                    .fillMaxSize()
                     .clickable {
                         showDialog = true
                     },
@@ -143,15 +143,10 @@ fun AdventCalendarDoor(
     }
 
     if (showDialog) {
-        val imageBitmap = ImageBitmap.imageResource(
-            LocalContext.current.resources,
-            item.imageResId
-        )
         AlertDialog(
             onDismissRequest = { showDialog = false },
             modifier = Modifier
-                .width(imageBitmap.width.dp)
-                .fillMaxHeight(),
+                .fillMaxWidth(),
             text = {
                 Box {
                     ZoomableImage(item.imageResId)
@@ -160,10 +155,9 @@ fun AdventCalendarDoor(
             confirmButton = {
                 TextButton(
                     onClick = { showDialog = false },
-                    modifier = Modifier.height(100.dp)
                 )
                 {
-                    Text(text = "Schließen", fontSize = 28.sp)
+                    Text(text = "Schließen", modifier = Modifier.padding(16.dp))
                 }
             },
             properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -192,7 +186,7 @@ fun AdventCalendarScreen(modifier: Modifier, viewModel: CalendarViewModel) {
 @Composable
 fun ZoomableImage(resId: Int) {
 
-    var scale by remember { mutableStateOf(1f) }
+    var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
     val state = rememberTransformableState { zoomChange, panChange, _ ->
@@ -200,8 +194,10 @@ fun ZoomableImage(resId: Int) {
         offset += panChange
     }
 
-    Image(
-        painter = painterResource(resId),
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(resId)
+            .build(),
         contentDescription = null,
         modifier = Modifier
             .fillMaxWidth()
